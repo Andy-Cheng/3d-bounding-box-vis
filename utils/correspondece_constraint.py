@@ -1,5 +1,5 @@
 import numpy as np
-from data_processing import KITTI_dataloader
+from data_processing.KITTI_dataloader import get_new_alpha
 
 def recover_angle(bin_anchor, bin_confidence, bin_num):
     # select anchor from bins
@@ -37,7 +37,7 @@ def compute_orientaion(P2, obj):
 
     # local orientation, [0, 2 * pi]
     # rot_local = obj.alpha + np.pi / 2
-    rot_local = KITTI_dataloader.get_new_alpha(obj.alpha)
+    rot_local = get_new_alpha(obj.alpha)
 
     rot_global = round(rot_global, 2)
     return rot_global, rot_local
