@@ -1,5 +1,5 @@
 import numpy as np
-from data_processing.KITTI_dataloader import get_new_alpha
+from data_processing import get_new_alpha
 
 def recover_angle(bin_anchor, bin_confidence, bin_num):
     # select anchor from bins

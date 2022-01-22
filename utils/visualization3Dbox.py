@@ -68,7 +68,7 @@ def compute_birdviewbox(line, shape, scale):
     corners_2D = (corners_2D).astype(np.int16)
     corners_2D = corners_2D.T
 
-    return np.vstack((corners_2D, corners_2D[0,:]))
+    return np.vstack((corners_2D, corners_2D[0,:])) # (9, 2): includes the first corner at the end
 
 
 
@@ -109,16 +109,36 @@ def draw_box(ax2, shape=900):
 
 def draw_on_chirp(ax3, line_p, x_grid, z_grid, color):
     # shape = 900
-    npline = [np.float64(line_p[i]) for i in range(1, len(line_p))]
-    # h = npline[7]
-    # w = npline[8]
-    # l = npline[9]
-    x = npline[10] * scale_xyz[0]
-    y = npline[11]
-    z = npline[12] * scale_xyz[2]
-    x_id, z_id = xz2idx_interpolate(x, z, x_grid, z_grid)
-    
-    ax3.scatter(x=x_id, y=z_id, c=color, alpha=.5)
+    obj = detectionInfo(line_p)
+
+    R = np.array([[np.cos(obj.rot_global), np.sin(obj.rot_global)],
+                  [-np.sin(obj.rot_global), np.cos(obj.rot_global)]])
+    t = np.array([obj.tx * scale_xyz[0], obj.tz * scale_xyz[2]]).reshape(1, 2).T
+
+    x_corners = [0, obj.l, obj.l, 0]  # -l/2
+    z_corners = [obj.w, obj.w, 0, 0]  # -w/2
+
+    x_corners += -np.float64(obj.l) / 2
+    z_corners += -np.float64(obj.w) / 2
+
+    # bounding box in object coordinate
+    corners_2D = np.array([x_corners, z_corners])
+    # rotate
+    corners_2D = R.dot(corners_2D)
+    # translation
+    corners_2D = corners_2D + t
+
+    x_coors, z_coors = xz2idx_interpolate(corners_2D[0, :], corners_2D[1, :], x_grid, z_grid)
+    corners_2D = np.concatenate((x_coors[:, None], z_coors[:, None]), axis=1).astype(np.int16)
+    corners_2D = np.vstack((corners_2D, corners_2D[0, :]))
+
+    codes = [Path.LINETO] * corners_2D.shape[0]
+    codes[0] = Path.MOVETO
+    codes[-1] = Path.CLOSEPOLY
+    pth = Path(corners_2D, codes)
+    p = patches.PathPatch(pth, fill=False, color=color, label='auxiliary')
+    ax3.add_patch(p)
+
 
 
 def compute_3Dbox(P2, line):
@@ -324,8 +344,8 @@ def main(args):
 
     VEHICLES = ['Car', 'Cyclist', 'Pedestrian']
     start_frame = 0
-    end_frame = len(os.listdir(image_path))
-    # end_frame = 100
+    # end_frame = len(os.listdir(image_path))
+    end_frame = 3
     cam_type = '0929' # change here
 
     visualization(args, image_path, label_path, calib_path, pred_path,
@@ -333,13 +353,13 @@ def main(args):
 
 if __name__ == '__main__':
 
-    scale_xyz = (1.35, 1, 1.35)
+    scale_xyz = (1.3686, 1.1231, 1.3977) # (1.35, 1, 1.35)
     date = '2019_09_29_ONRD001' # change here
     parser = argparse.ArgumentParser(description='Visualize 3D bounding box on images',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     # parser.add_argument('-a', '-dataset', type=str, default='tracklet', help='training dataset or tracklet')
     parser.add_argument('-s', '--save', type=bool, default=True, help='Save Figure or not')
-    parser.add_argument('-p', '--path', type=str, default=f'./results/CRUW/train/{date}_scaled_xyz', help='Output Image folder') #change here
+    parser.add_argument('-p', '--path', type=str, default=f'./results/CRUW/train/{date}_scaled_xyz_new', help='Output Image folder') #change here
     parser.add_argument('-fr', '--frame_rate', type=str, default='10', help='frame rate of output video')
     parser.add_argument('-sv', '--save_video', type=bool, default=True, help='whether to save video')
     
@@ -353,5 +373,5 @@ if __name__ == '__main__':
 
     if args.save_video:
         os.chdir(args.path)
-        subprocess.run(['ffmpeg', '-framerate', args.frame_rate, '-i', '%010d.png' , f'{date}_scaled_xyz_135_1_135_whole.mp4'])
+        subprocess.run(['ffmpeg', '-framerate', args.frame_rate, '-i', '%010d.png' , f'{date}_scaled_xyz_{scale_xyz}.mp4'])
 
