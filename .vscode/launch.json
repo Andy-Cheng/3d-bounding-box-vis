@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "args": [""],
+            "args": ["-s", "True", "-p" ,"/home/andy/3d-bounding-box-estimation-for-autonomous-driving/results/CRUW/train/2019_09_29_ONRD001_scale_(1.3701, 1.1646, 1.3722)__pitch_0.25", "-fr", "10", "-sv", "False"],
             "justMyCode": false
         }
     ]

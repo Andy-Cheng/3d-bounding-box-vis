@@ -1,5 +1,5 @@
 import numpy as np
-from data_processing import get_new_alpha
+# from data_processing import get_new_alpha
 
 def recover_angle(bin_anchor, bin_confidence, bin_num):
     # select anchor from bins
@@ -26,21 +26,21 @@ def recover_angle(bin_anchor, bin_confidence, bin_num):
     return angle
 
 
-def compute_orientaion(P2, obj):
-    x = (obj.xmax + obj.xmin) / 2
-    # compute camera orientation
-    u_distance = x - P2[0, 2]
-    focal_length = P2[0, 0]
-    rot_ray = np.arctan(u_distance / focal_length)
-    # global = alpha + ray
-    rot_global = obj.alpha + rot_ray
+# def compute_orientaion(P2, obj):
+#     x = (obj.xmax + obj.xmin) / 2
+#     # compute camera orientation
+#     u_distance = x - P2[0, 2]
+#     focal_length = P2[0, 0]
+#     rot_ray = np.arctan(u_distance / focal_length)
+#     # global = alpha + ray
+#     rot_global = obj.alpha + rot_ray
 
-    # local orientation, [0, 2 * pi]
-    # rot_local = obj.alpha + np.pi / 2
-    rot_local = get_new_alpha(obj.alpha)
+#     # local orientation, [0, 2 * pi]
+#     # rot_local = obj.alpha + np.pi / 2
+#     rot_local = get_new_alpha(obj.alpha)
 
-    rot_global = round(rot_global, 2)
-    return rot_global, rot_local
+#     rot_global = round(rot_global, 2)
+#     return rot_global, rot_local
 
 
 def translation_constraints(P2, obj, rot_local):
@@ -107,6 +107,8 @@ class detectionInfo(object):
 
         # global orientation [-pi, pi]
         self.rot_global = float(line[14])
+
+
 
     def member_to_list(self):
         output_line = []
